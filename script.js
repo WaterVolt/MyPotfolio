@@ -115,3 +115,82 @@
   }
 
   window.addEventListener('scroll', scrollActive)
+// Client-side JavaScript
+document.getElementById('sendButton').addEventListener('click', function() {
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const message = document.getElementById('message').value;
+
+    // Basic client-side validation
+    if (!name || !email || !message) {
+        alert('Please fill in all fields.');
+        return;
+    }
+
+    // Send form data to server
+    const formData = { name, email, message };
+    fetch('/sendEmail', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Message sent successfully!');
+        } else {
+            alert('Failed to send message. Please try again later.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+
+// Server-side Node.js with Express.js
+const express = require('express');
+const nodemailer = require('nodemailer');
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.json());
+
+app.post('/sendEmail', (req, res) => {
+    const { name, email, message } = req.body;
+
+    // Basic server-side validation
+    if (!name || !email || !message) {
+        return res.status(400).json({ error: 'Please fill in all fields.' });
+    }
+
+    // Nodemailer configuration
+    const transporter = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+            user: 'your_email@gmail.com',
+            pass: 'your_email_password'
+        }
+    });
+
+    const mailOptions = {
+        from: email,
+        to: 'watervolt69@gmail.com',
+        subject: 'New message from your website',
+        text: `${name} (${email}) says: ${message}`
+    };
+
+    // Send email
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.error('Error:', error);
+            return res.status(500).json({ error: 'Failed to send message. Please try again later.' });
+        }
+        console.log('Email sent:', info.response);
+        return res.status(200).json({ success: 'Message sent successfully!' });
+    });
+});
+
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+});
